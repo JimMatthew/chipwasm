@@ -99,6 +99,10 @@
       <option value="roms/ibm.ch8">IBM</option>
       <option value="roms/particles.ch8">Particles</option>
       <option value="roms/6-keypad.ch8">keypad</option>
+      <option value="roms/breakout.rom">Breakout</option>
+      <option value="roms/Clock.ch8">Clock</option>
+      <option value="roms/Tetris.ch8">Tetris</option>
+      <option value="roms/flightrunner.ch8">Flightrunner</option>
     </select>
     <br><br>
     <strong>About:</strong>
@@ -225,7 +229,7 @@
             const buf = Module._malloc(bytes.length);
             Module.HEAPU8.set(bytes, buf);
             load_program(buf, bytes.length);
-            startEmulation(); // if not already started
+            startEmulation(); 
           });
       };
     });
