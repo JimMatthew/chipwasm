@@ -13,6 +13,7 @@
 #define STACK_SIZE 16
 #define NUM_KEYS 16
 #define PIXEL_SIZE 10
+
 uint8_t memory[MEM_SIZE];
 uint8_t program[MEM_SIZE];
 uint8_t registers[NUM_REGISTERS];
@@ -21,12 +22,13 @@ uint8_t display[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 uint8_t key[NUM_KEYS];
 
 uint8_t sp = 0; // stack pointer
-
 uint16_t programCounter = 0;
 uint16_t indexRegister = 0;
-uint16_t op = 0;
 uint8_t delayTimer = 0;
 uint8_t soundTimer = 0;
+
+int isPaused = 0;
+int programSize = -1;
 int displayUpdate = 0;
 int setXOnShift = 1;
 int vfReset = 1;
@@ -35,16 +37,11 @@ int shifty = 1;
 int jumpx = 0;
 int clip = 0;
 int temp = 0;
-int isPaused = 0;
-int showOp = 0;
-int programSize = -1;
 int nn = 0;
 int np = 0;
 int kp = -1;
 int showDebug = 1;
-uint16_t sum = 0;
-uint8_t value = 0;
-uint8_t rnd = 0;
+
 uint8_t fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -122,11 +119,13 @@ EMSCRIPTEN_KEEPALIVE
 void cycle() {
     if (isPaused) return;
     uint16_t opcode = memory[programCounter] << 8 | memory[programCounter + 1];
-    op = opcode;
     programCounter += 2;
     uint8_t xx = (opcode & 0x0F00) >> 8;
     uint8_t yy = (opcode & 0x00F0) >> 4;
     uint8_t subcode = opcode & 0x000F;
+    uint16_t sum = 0;
+    uint8_t value = 0;
+    uint8_t rnd = 0;
     // switch on first nibble
     switch ((opcode & 0xF000) >> 12) {
     case 0x0:
@@ -267,19 +266,16 @@ void cycle() {
         switch (opcode & 0x00FF) {
         case 0x07: registers[xx] = delayTimer; break;
         case 0x0A:
-
             for (int i = 0; i < 16; i++) {
-                if (np) {
+                if (kp != -1) {
                     if (key[kp] != 1) {
                         nn = 1;
                         kp = -1;
-                        np = 0;
                     }
                     break;
                 }
                 if (key[i] == 1) {
                     kp = i;
-                    np = 1;
                     registers[xx] = i;
                     break;
                 }
