@@ -9,6 +9,7 @@
     }
   </style>
   <h2>Chip-8 Emulator</h2>
+  
 </head>
 
 <body>
@@ -19,9 +20,12 @@
   <input type="button" id="resetButton" value="Reset">
   <br>
   <p> 
+    <br>
+    <strong>About:</strong>
+    <br><br>
     This is a simple CHIP-8 emulator. The core emulator logic is implemented in C and compiled to WebAssembly.
     The input handling and rendering is done in JavaScript.
-    <br>
+    <br><br>
     <strong>Controls:</strong>
     <ul>
       <li>1, 2, 3, 4 - 1, 2, 3, C</li>
@@ -39,6 +43,9 @@
       </ul>
     <p>
   </p>
+  <footer>
+    <p>  Created by James Lindstrom</p>
+    </footer>
   <script type="module">
     import createModule from './core.js';
 
@@ -57,7 +64,7 @@
 
       const canvas = document.getElementById("screen");
       const ctx = canvas.getContext("2d");
-      const scale = 10;
+      const scale = 15;
       const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), 64 * 32);
 
       function drawDisplay() {
