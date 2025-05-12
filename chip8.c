@@ -30,17 +30,18 @@ uint8_t soundTimer = 0;
 int isPaused = 0;
 int programSize = -1;
 int displayUpdate = 0;
-int setXOnShift = 1;
-int vfReset = 1;
-int memoryInc = 1;
-int shifty = 1;
-int jumpx = 0;
+
+//Quirck settings for chip8 behavior
+int setXOnShift = 1; // Shift opcode moves VY to VX
+int vfReset = 1;     // AND OR and XOR reset VF to 0
+int memoryInc = 1;   // increment index register after store/load
+int jumpx = 0;       // Jump opcode uses Vx instead of V0
 int clip = 0;
+
+//temp variables
 int temp = 0;
 int nn = 0;
-int np = 0;
 int kp = -1;
-int showDebug = 1;
 
 uint8_t fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
