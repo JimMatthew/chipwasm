@@ -17,6 +17,28 @@
   <input type="file" id="romLoader">
   <input type="button" id="pauseButton" value="Pause">
   <input type="button" id="resetButton" value="Reset">
+  <br>
+  <p> 
+    This is a simple CHIP-8 emulator. The core emulator logic is implemented in C and compiled to WebAssembly.
+    The input handling and rendering is done in JavaScript.
+    <br>
+    <strong>Controls:</strong>
+    <ul>
+      <li>1, 2, 3, 4 - 1, 2, 3, C</li>
+      <li>Q, W, E, R - 4, 5, 6, D</li>
+      <li>A, S, D, F - 7, 8, 9, E</li>
+      <li>Z, X, C, V - A, 0, B, F</li>
+    </ul>
+    <p>
+      <strong>Instructions:</strong>
+      <ul>
+        <li>Select a ROM file using the file input.</li>
+        <li>Press the keys as indicated above to control the emulator.</li>
+        <li>Click "Pause" to pause the emulator.</li>
+        <li>Click "Reset" to reset the emulator.</li>
+      </ul>
+    <p>
+  </p>
   <script type="module">
     import createModule from './core.js';
 
