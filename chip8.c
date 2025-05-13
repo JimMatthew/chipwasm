@@ -66,9 +66,7 @@ uint8_t fontset[80] = {
 };
 
 void loadFont() {
-    for (int i = 0; i < 80; ++i) {
-        chip8.memory[0x050 + i] = fontset[i];
-    }
+     memcpy(&chip8.memory[0x050], fontset, 80);
 }
 
 EMSCRIPTEN_KEEPALIVE
