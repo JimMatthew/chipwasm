@@ -4,21 +4,62 @@ createModule().then((Module) => {
     const init = Module.cwrap('init', 'void', []);
     const cycle = Module.cwrap('cycle', 'void', []);
     const load_program = Module.cwrap('loadROM', 'void', ['number', 'number']);
-    const getDisplay = Module.cwrap('getDisplay', 'number', []);
     const pressKey = Module.cwrap('pressKey', 'void', ['number']);
     const releaseKey = Module.cwrap('releaseKey', 'void', ['number']);
     const getDisplayPtr = Module.cwrap('getDisplay', 'number', []);
     const reset = Module.cwrap('reload', 'void', []);
     const pauseChip = Module.cwrap('pauseChip', 'void', []);
     const tick = Module.cwrap('tick', 'void', []);
+    const isDisplayUpdated = Module.cwrap('isDisplayUpdated', 'number', []);
+    const resetDisplayFlag = Module.cwrap('resetDisplayFlag', 'void', []);
     init();
 
     const canvas = document.getElementById("screen");
     const ctx = canvas.getContext("2d");
     const scale = 10;
     const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), 64 * 32);
+    const prevDisplay = new Uint8Array(64 * 32);
 
-    function drawDisplay() {
+    function drawDisplay(forceRedraw = 0) {
+        if (forceRedraw) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#FFFFFF";
+            for (let y = 0; y < 32; y++) {
+                for (let x = 0; x < 64; x++) {
+                    if (display[y * 64 + x]) {
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                    }
+                }
+            }
+            resetDisplayFlag();
+            return;
+        }
+        if (isDisplayUpdated() === 0) return;
+
+        for (let y = 0; y < 32; y++) {
+            for (let x = 0; x < 64; x++) {
+                const i = y * 64 + x;
+                const current = display[i];
+                const previous = prevDisplay[i];
+
+                if (current !== previous) {
+                    if (current) {
+                        ctx.fillStyle = "#FFFFFF";
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                    } else {
+                        // Clear this pixel
+                        ctx.fillStyle = "#000000";
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                    }
+
+                    prevDisplay[i] = current;
+                }
+            }
+        }
+        resetDisplayFlag(); 
+    }
+    function drawDisplay5() {
+        if (isDisplayUpdated() === 0) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#FFFFFF";
 
@@ -29,6 +70,7 @@ createModule().then((Module) => {
                 }
             }
         }
+        resetDisplayFlag();
     }
 
     let emulationStarted = false;
@@ -77,7 +119,8 @@ createModule().then((Module) => {
 
     document.getElementById("resetButton").addEventListener("click", () => {
         reset();
-        drawDisplay();
+        prevDisplay.fill(0);
+        drawDisplay(1);
     });
 
     document.getElementById("pauseButton").addEventListener("click", () => {

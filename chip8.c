@@ -91,6 +91,11 @@ int isDisplayUpdated() {
 }
 
 EMSCRIPTEN_KEEPALIVE
+void resetDisplayFlag() {
+    chip8.displayUpdate = 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
 void pressKey(int k) {
     if (k >= 0 && k < 16) chip8.key[k] = 1;
 }
@@ -111,6 +116,7 @@ void reload() {
     chip8.indexRegister = 0;
     chip8.delayTimer = 0;
     chip8.sp = 0;
+    chip8.displayUpdate = 1;
 }
 
 EMSCRIPTEN_KEEPALIVE
