@@ -12,6 +12,7 @@ createModule().then((Module) => {
     const tick = Module.cwrap('tick', 'void', []);
     const isDisplayUpdated = Module.cwrap('isDisplayUpdated', 'number', []);
     const resetDisplayFlag = Module.cwrap('resetDisplayFlag', 'void', []);
+    let opsPerFrame = 10;
     init();
 
     const canvas = document.getElementById("screen");
@@ -54,7 +55,7 @@ createModule().then((Module) => {
                 }
             }
         }
-        resetDisplayFlag(); 
+        resetDisplayFlag();
     }
     function drawDisplay5() {
         if (isDisplayUpdated() === 0) return;
@@ -78,7 +79,11 @@ createModule().then((Module) => {
         emulationStarted = true;
 
         setInterval(() => {
-            for (let i = 0; i < 10; i++) cycle();
+            for (let i = 0; i < opsPerFrame; i++) {
+                console.log("Cycle: " + i);
+                cycle();
+                totalOps++;
+            }
             drawDisplay();
             tick();
         }, 1000 / 60);
@@ -139,4 +144,10 @@ createModule().then((Module) => {
                 startEmulation();
             });
     };
+
+    document.getElementById('opsSlider').addEventListener('input', (e) => {
+        opsPerFrame = parseInt(e.target.value, 10);
+    });
+
+    
 });
