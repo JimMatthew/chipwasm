@@ -107,14 +107,18 @@ void releaseKey(int k) {
 
 EMSCRIPTEN_KEEPALIVE
 void reload() {
-    memset(chip8.memory, 0, MEM_SIZE);
-    memset(&chip8.display, 0, DISPLAY_HEIGHT * DISPLAY_WIDTH);
-    memset(chip8.registers, 0, NUM_REGISTERS);
+    memset(chip8.memory, 0, sizeof(chip8.memory));
+    memset(chip8.display, 0, sizeof(chip8.display));
+    memset(chip8.registers, 0, sizeof(chip8.registers));
+    memset(chip8.stack, 0, sizeof(chip8.stack));
     loadFont();
-    memcpy(&chip8.memory[0x200], &chip8.program, chip8.programSize);
+    if (chip8.programSize > 0 && chip8.programSize <= (MEM_SIZE - 0x200)) {
+        memcpy(&chip8.memory[0x200], chip8.program, chip8.programSize);
+    }
     chip8.programCounter = 0x200;
     chip8.indexRegister = 0;
     chip8.delayTimer = 0;
+    chip8.soundTimer = 0;
     chip8.sp = 0;
     chip8.displayUpdate = 1;
 }
