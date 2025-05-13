@@ -82,7 +82,6 @@ createModule().then((Module) => {
             for (let i = 0; i < opsPerFrame; i++) {
                 console.log("Cycle: " + i);
                 cycle();
-                totalOps++;
             }
             drawDisplay();
             tick();
