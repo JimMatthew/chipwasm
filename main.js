@@ -147,5 +147,4 @@ createModule().then((Module) => {
         opsPerFrame = parseInt(e.target.value, 10);
     });
 
-    
 });
