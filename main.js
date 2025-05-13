@@ -80,7 +80,6 @@ createModule().then((Module) => {
 
         setInterval(() => {
             for (let i = 0; i < opsPerFrame; i++) {
-                console.log("Cycle: " + i);
                 cycle();
             }
             drawDisplay();
