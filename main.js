@@ -47,11 +47,9 @@ createModule().then((Module) => {
                         ctx.fillStyle = "#FFFFFF";
                         ctx.fillRect(x * scale, y * scale, scale, scale);
                     } else {
-                        // Clear this pixel
                         ctx.fillStyle = "#000000";
                         ctx.fillRect(x * scale, y * scale, scale, scale);
                     }
-
                     prevDisplay[i] = current;
                 }
             }
