@@ -228,15 +228,15 @@ void Fcode(uint16_t opcode, uint8_t xx) {
     }
 }
 
-void Ecode(uint16_t opcode, uint8_t xx) {
-    switch (opcode & 0x00FF) {
+void Ecode(uint16_t NN, uint8_t xx) {
+    switch (NN) {
     case 0x9E:
         if (chip8.key[chip8.registers[xx]] == 1) chip8.programCounter += 2;
         break;
     case 0xA1:
         if (chip8.key[chip8.registers[xx]] == 0) chip8.programCounter += 2;
         break;
-    default: printf("Unknown opcode in E 0x%x\n\n", opcode); chip8.isPaused = 1;
+    default: printf("Unknown opcode in E 0x%x\n\n", NN); chip8.isPaused = 1;
     }
 }
 
@@ -280,14 +280,15 @@ void cycle() {
     uint16_t opcode = chip8.memory[chip8.programCounter] << 8
                       | chip8.memory[chip8.programCounter + 1];
     chip8.programCounter += 2;
-    uint8_t xx = (opcode & 0x0F00) >> 8;
-    uint8_t yy = (opcode & 0x00F0) >> 4;
+    uint8_t X = (opcode & 0x0F00) >> 8;
+    uint8_t Y = (opcode & 0x00F0) >> 4;
     uint8_t subcode = opcode & 0x000F;
     uint16_t sum = 0;
     uint8_t value = 0;
-    uint8_t N = ((opcode & 0xF000) >> 12);
-    int NNN = opcode & 0x0FFF;
+    uint8_t N = (opcode & 0xF000) >> 12;
     uint16_t NN = opcode & 0x00FF;
+    int NNN = opcode & 0x0FFF;
+    
     // switch on first nibble
     switch (N) {
     case 0x0: code0(opcode); break;
@@ -298,34 +299,33 @@ void cycle() {
         chip8.programCounter = NNN;
         break;
     case 0x3:
-        if (chip8.registers[xx] == (NN)) chip8.programCounter += 2;
+        if (chip8.registers[X] == NN) chip8.programCounter += 2;
         break;
     case 0x4:
-        if (chip8.registers[xx] != (NN)) chip8.programCounter += 2;
+        if (chip8.registers[X] != NN) chip8.programCounter += 2;
         break;
     case 0x5:
-        if (chip8.registers[xx] == chip8.registers[yy])
+        if (chip8.registers[X] == chip8.registers[Y])
             chip8.programCounter += 2;
         break;
-    case 0x6: chip8.registers[xx] = NN; break;
-    case 0x7: chip8.registers[xx] += (NN); break;
-    case 0x8: arithmetic(subcode, xx, yy); break;
+    case 0x6: chip8.registers[X] = NN; break;
+    case 0x7: chip8.registers[X] += NN; break;
+    case 0x8: arithmetic(subcode, X, Y); break;
     case 0x9:
-        if (chip8.registers[xx] != chip8.registers[yy])
+        if (chip8.registers[X] != chip8.registers[Y])
             chip8.programCounter += 2;
         break;
     case 0xA: chip8.indexRegister = NNN; break;
     case 0xB:
         chip8.programCounter
-            = (NNN) + jumpx ? chip8.registers[xx] : chip8.registers[0];
+            = NNN + jumpx ? chip8.registers[X] : chip8.registers[0];
         break;
     case 0xC:
-        chip8.registers[xx] = (rand() % 256) & (NN); // Apply mask
+        chip8.registers[X] = (rand() % 256) & NN; // Apply mask
         break;
-    case 0xD: displayCode(opcode, xx, yy); break;
-    case 0xE: Ecode(opcode, xx); break;
-    case 0xF: Fcode(opcode, xx); break;
-
+    case 0xD: displayCode(opcode, X, Y); break;
+    case 0xE: Ecode(opcode, X); break;
+    case 0xF: Fcode(opcode, X); break;
     default: printf("Unknown opcode main 0x%x\n\n", opcode); chip8.isPaused = 1;
     }
 }
