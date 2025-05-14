@@ -12,22 +12,34 @@ createModule().then((Module) => {
     const tick = Module.cwrap('tick', 'void', []);
     const isDisplayUpdated = Module.cwrap('isDisplayUpdated', 'number', []);
     const resetDisplayFlag = Module.cwrap('resetDisplayFlag', 'void', []);
+    const isHires = Module.cwrap('isHiresMode', 'number', []);
+    const setMode = Module.cwrap('setMode', 'void', ['number']);
+    let hires = 0;
     let opsPerFrame = 10;
     init();
 
     const canvas = document.getElementById("screen");
     const ctx = canvas.getContext("2d");
-    const scale = 10;
+    let scale = 10;
     const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), 64 * 32);
-    const prevDisplay = new Uint8Array(64 * 32);
+    let prevDisplay = new Uint8Array(64 * 32);
 
     function drawDisplay(forceRedraw = 0) {
+        const width = isHires() ? 128 : 64;
+        const height = isHires() ? 64 : 32;
+    
+        const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), width * height);
+        if (hires !== isHires()) {
+            hires = isHires();
+            updateCanvasSize();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
         if (forceRedraw) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#FFFFFF";
-            for (let y = 0; y < 32; y++) {
-                for (let x = 0; x < 64; x++) {
-                    if (display[y * 64 + x]) {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (display[y * width + x]) {
                         ctx.fillRect(x * scale, y * scale, scale, scale);
                     }
                 }
@@ -37,35 +49,16 @@ createModule().then((Module) => {
         }
         if (isDisplayUpdated() === 0) return;
 
-        for (let y = 0; y < 32; y++) {
-            for (let x = 0; x < 64; x++) {
-                const i = y * 64 + x;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const i = y * width + x;
                 const current = display[i];
                 const previous = prevDisplay[i];
 
                 if (current !== previous) {
-                    if (current) {
-                        ctx.fillStyle = "#FFFFFF";
-                        ctx.fillRect(x * scale, y * scale, scale, scale);
-                    } else {
-                        ctx.fillStyle = "#000000";
-                        ctx.fillRect(x * scale, y * scale, scale, scale);
-                    }
-                    prevDisplay[i] = current;
-                }
-            }
-        }
-        resetDisplayFlag();
-    }
-    function drawDisplay5() {
-        if (isDisplayUpdated() === 0) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#FFFFFF";
-
-        for (let y = 0; y < 32; y++) {
-            for (let x = 0; x < 64; x++) {
-                if (display[y * 64 + x]) {
+                    ctx.fillStyle = current ? "#FFFFFF" : "#000000";
                     ctx.fillRect(x * scale, y * scale, scale, scale);
+                    prevDisplay[i] = current;
                 }
             }
         }
@@ -85,6 +78,15 @@ createModule().then((Module) => {
             drawDisplay();
             tick();
         }, 1000 / 60);
+    }
+
+    const updateCanvasSize = () => {
+        const width = isHires() ? 128 : 64;
+        const height = isHires() ? 64 : 32;
+        scale = isHires() ? 5 : 10;
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        prevDisplay = new Uint8Array(width * height); 
     }
 
     document.getElementById("romLoader").onchange = (e) => {
@@ -145,6 +147,13 @@ createModule().then((Module) => {
 
     document.getElementById('opsSlider').addEventListener('input', (e) => {
         opsPerFrame = parseInt(e.target.value, 10);
+    });
+
+    document.getElementById('schipToggle').addEventListener('change', (e) => {
+        const enabled = e.target.checked ? 1 : 0;
+        setMode(enabled);
+        updateCanvasSize();     
+        drawDisplay(1);         
     });
 
 });
