@@ -133,126 +133,16 @@ void tick() {
     if (chip8.delayTimer > 0) chip8.delayTimer--;
 }
 EMSCRIPTEN_KEEPALIVE
-int isHiresMode() {
-    return hires;
-}
-
-void arithmetic(uint8_t subcode, uint8_t xx, uint8_t yy) {
-    uint16_t sum = 0;
-    switch (subcode) {
-    case 0x0: chip8.registers[xx] = chip8.registers[yy]; break;
-    case 0x1:
-        chip8.registers[xx] |= chip8.registers[yy];
-        if (vfReset) chip8.registers[0xF] = 0;
-        break;
-    case 0x2:
-        chip8.registers[xx] &= chip8.registers[yy];
-        if (vfReset) chip8.registers[0xF] = 0;
-        break;
-    case 0x3:
-        chip8.registers[xx] ^= chip8.registers[yy];
-        if (vfReset) chip8.registers[0xF] = 0;
-        break;
-    case 0x4:
-        sum = chip8.registers[xx] + chip8.registers[yy];
-        chip8.registers[xx] = sum & 0xFF;
-        chip8.registers[0xF] = (sum > 0xFF) ? 1 : 0;
-        break;
-    case 0x5:
-        temp = chip8.registers[xx] < chip8.registers[yy] ? 0 : 1;
-        chip8.registers[xx] -= chip8.registers[yy];
-        chip8.registers[0xF] = temp;
-        break;
-    case 0x6:
-        if (setXOnShift) chip8.registers[xx] = chip8.registers[yy];
-        temp = chip8.registers[xx] & 0x1;
-        chip8.registers[xx] >>= 1;
-        chip8.registers[0xF] = temp;
-        break;
-    case 0x7:
-        temp = chip8.registers[xx] > chip8.registers[yy] ? 0 : 1;
-        chip8.registers[xx] = chip8.registers[yy] - chip8.registers[xx];
-        chip8.registers[0xF] = temp;
-        break;
-    case 0xE:
-        if (setXOnShift) chip8.registers[xx] = chip8.registers[yy];
-        temp = (chip8.registers[xx] & 0x80) >> 7;
-        chip8.registers[xx] <<= 1;
-        chip8.registers[0xF] = temp;
-        break;
-    }
-}
-
-void Fcode(uint16_t opcode, uint8_t xx) {
-    uint8_t value = 0;
-    switch (opcode & 0x00FF) {
-    case 0x07: chip8.registers[xx] = chip8.delayTimer; break;
-    case 0x0A:
-        for (int i = 0; i < 16; i++) {
-            if (kp != -1) {
-                if (chip8.key[kp] != 1) {
-                    nn = 1;
-                    kp = -1;
-                }
-                break;
-            }
-            if (chip8.key[i] == 1) {
-                kp = i;
-                chip8.registers[xx] = i;
-                break;
-            }
-        }
-        if (!nn) {
-            chip8.programCounter -= 2;
-        }
-        nn = 0;
-        break;
-    case 0x15: chip8.delayTimer = chip8.registers[xx]; break;
-    case 0x18: chip8.soundTimer = chip8.registers[xx]; break;
-    case 0x1E: chip8.indexRegister += chip8.registers[xx]; break;
-    case 0x29: chip8.indexRegister = 0x050 + (chip8.registers[xx] * 5); break;
-    case 0x33:
-        value = chip8.registers[xx];
-        chip8.memory[chip8.indexRegister] = value / 100;
-        chip8.memory[chip8.indexRegister + 1] = (value / 10) % 10;
-        chip8.memory[chip8.indexRegister + 2] = value % 10;
-        break;
-    case 0x55:
-        for (int i = 0; i <= (xx); i++) {
-            chip8.memory[chip8.indexRegister + i] = chip8.registers[i];
-        }
-        if (memoryInc) chip8.indexRegister += xx + 1;
-        break;
-    case 0x65:
-        for (int i = 0; i <= (xx); i++) {
-            chip8.registers[i] = chip8.memory[chip8.indexRegister + i];
-        }
-        if (memoryInc) chip8.indexRegister += xx + 1;
-        break;
-    default: printf("Unknown opcode in F 0x%x\n\n", opcode); chip8.isPaused = 1;
-    }
-}
-
-void Ecode(uint16_t NN, uint8_t xx) {
-    switch (NN) {
-    case 0x9E:
-        if (chip8.key[chip8.registers[xx]] == 1) chip8.programCounter += 2;
-        break;
-    case 0xA1:
-        if (chip8.key[chip8.registers[xx]] == 0) chip8.programCounter += 2;
-        break;
-    default: printf("Unknown opcode in E 0x%x\n\n", NN); chip8.isPaused = 1;
-    }
-}
+int isHiresMode() { return hires; }
 
 EMSCRIPTEN_KEEPALIVE
 void setMode(int mode) {
     if (mode == 0) {
         hires = 0;
-        setXOnShift = 1; 
-        vfReset = 1;     
-        memoryInc = 1;   
-        jumpx = 0;       
+        setXOnShift = 1;
+        vfReset = 1;
+        memoryInc = 1;
+        jumpx = 0;
         chip8.displayUpdate = 1;
     } else if (mode == 1) {
         setXOnShift = 0;
@@ -265,7 +155,115 @@ void setMode(int mode) {
     }
 }
 
-void displayCode(uint16_t opcode, uint8_t xx, uint8_t yy) {
+void code8(uint8_t subcode, uint8_t X, uint8_t Y) {
+    uint16_t sum = 0;
+    switch (subcode) {
+    case 0x0: chip8.registers[X] = chip8.registers[Y]; break;
+    case 0x1:
+        chip8.registers[X] |= chip8.registers[Y];
+        if (vfReset) chip8.registers[0xF] = 0;
+        break;
+    case 0x2:
+        chip8.registers[X] &= chip8.registers[Y];
+        if (vfReset) chip8.registers[0xF] = 0;
+        break;
+    case 0x3:
+        chip8.registers[X] ^= chip8.registers[Y];
+        if (vfReset) chip8.registers[0xF] = 0;
+        break;
+    case 0x4:
+        sum = chip8.registers[X] + chip8.registers[Y];
+        chip8.registers[X] = sum & 0xFF;
+        chip8.registers[0xF] = (sum > 0xFF) ? 1 : 0;
+        break;
+    case 0x5:
+        temp = chip8.registers[X] < chip8.registers[Y] ? 0 : 1;
+        chip8.registers[X] -= chip8.registers[Y];
+        chip8.registers[0xF] = temp;
+        break;
+    case 0x6:
+        if (setXOnShift) chip8.registers[X] = chip8.registers[Y];
+        temp = chip8.registers[X] & 0x1;
+        chip8.registers[X] >>= 1;
+        chip8.registers[0xF] = temp;
+        break;
+    case 0x7:
+        temp = chip8.registers[X] > chip8.registers[Y] ? 0 : 1;
+        chip8.registers[X] = chip8.registers[Y] - chip8.registers[X];
+        chip8.registers[0xF] = temp;
+        break;
+    case 0xE:
+        if (setXOnShift) chip8.registers[X] = chip8.registers[Y];
+        temp = (chip8.registers[X] & 0x80) >> 7;
+        chip8.registers[X] <<= 1;
+        chip8.registers[0xF] = temp;
+        break;
+    }
+}
+
+void codeF(uint16_t opcode, uint8_t X) {
+    uint8_t value = 0;
+    switch (opcode & 0x00FF) {
+    case 0x07: chip8.registers[X] = chip8.delayTimer; break;
+    case 0x0A:
+        for (int i = 0; i < 16; i++) {
+            if (kp != -1) {
+                if (chip8.key[kp] != 1) {
+                    nn = 1;
+                    kp = -1;
+                }
+                break;
+            }
+            if (chip8.key[i] == 1) {
+                kp = i;
+                chip8.registers[X] = i;
+                break;
+            }
+        }
+        if (!nn) {
+            chip8.programCounter -= 2;
+        }
+        nn = 0;
+        break;
+    case 0x15: chip8.delayTimer = chip8.registers[X]; break;
+    case 0x18: chip8.soundTimer = chip8.registers[X]; break;
+    case 0x1E: chip8.indexRegister += chip8.registers[X]; break;
+    case 0x29: chip8.indexRegister = 0x050 + (chip8.registers[X] * 5); break;
+    case 0x33:
+        value = chip8.registers[X];
+        chip8.memory[chip8.indexRegister] = value / 100;
+        chip8.memory[chip8.indexRegister + 1] = (value / 10) % 10;
+        chip8.memory[chip8.indexRegister + 2] = value % 10;
+        break;
+    case 0x55:
+        for (int i = 0; i <= X; i++) {
+            chip8.memory[chip8.indexRegister + i] = chip8.registers[i];
+        }
+        if (memoryInc) chip8.indexRegister += X + 1;
+        break;
+    case 0x65:
+        for (int i = 0; i <= X; i++) {
+            chip8.registers[i] = chip8.memory[chip8.indexRegister + i];
+        }
+        if (memoryInc) chip8.indexRegister += X + 1;
+        break;
+    default: printf("Unknown opcode in F 0x%x\n\n", opcode); chip8.isPaused = 1;
+    }
+}
+
+void codeE(uint16_t NN, uint8_t xx) {
+    switch (NN) {
+    case 0x9E:
+        if (chip8.key[chip8.registers[xx]] == 1) chip8.programCounter += 2;
+        break;
+    case 0xA1:
+        if (chip8.key[chip8.registers[xx]] == 0) chip8.programCounter += 2;
+        break;
+    default: printf("Unknown opcode in E 0x%x\n\n", NN); chip8.isPaused = 1;
+    }
+}
+
+void codeD(uint16_t opcode, uint8_t xx, uint8_t yy) {
     int height = opcode & 0x000F;
     uint8_t x = chip8.registers[xx];
     uint8_t y = chip8.registers[yy];
@@ -289,8 +287,8 @@ void displayCode(uint16_t opcode, uint8_t xx, uint8_t yy) {
         if (width == 8) {
             spriteRow = chip8.memory[chip8.indexRegister + row];
         } else {
-            spriteRow = (chip8.memory[chip8.indexRegister + row * 2] << 8) |
-                         chip8.memory[chip8.indexRegister + row * 2 + 1];
+            spriteRow = (chip8.memory[chip8.indexRegister + row * 2] << 8)
+                        | chip8.memory[chip8.indexRegister + row * 2 + 1];
         }
 
         for (int col = 0; col < width; col++) {
@@ -298,34 +296,6 @@ void displayCode(uint16_t opcode, uint8_t xx, uint8_t yy) {
             uint8_t screenX = (x + col) % screenWidth;
             uint8_t screenY = (y + row) % screenHeight;
             int index = screenY * screenWidth + screenX;
-
-            if (spritePixel) {
-                if (chip8.display[index]) chip8.registers[0xF] = 1;
-                chip8.display[index] ^= 1;
-            }
-        }
-    }
-
-    chip8.displayUpdate = 1;
-}
-
-void displayCode2(uint16_t opcode, uint8_t xx, uint8_t yy) {
-    int height = opcode & 0x000F;
-    uint8_t x = chip8.registers[xx] & 0x3F; // VX % 64
-    uint8_t y = chip8.registers[yy] & 0x1F; // VY % 32
-    uint8_t width = 8;
-    chip8.registers[0xF] = 0;
-    if (height == 0) {
-        height = 16;
-        width = 16;
-    }
-    for (int row = 0; row < height; row++) {
-        if (y + row >= DISPLAY_HEIGHT) break; // Clip vertically
-        uint8_t spriteByte = chip8.memory[chip8.indexRegister + row];
-        for (int col = 0; col < 8; col++) {
-            if (x + col >= DISPLAY_WIDTH) break; // Clip horizontally
-            uint8_t spritePixel = (spriteByte >> (7 - col)) & 0x1;
-            int index = (y + row) * DISPLAY_WIDTH + (x + col);
             if (spritePixel) {
                 if (chip8.display[index]) chip8.registers[0xF] = 1;
                 chip8.display[index] ^= 1;
@@ -340,7 +310,7 @@ void code0(uint16_t opcode) {
     int height = 0;
 
     switch (opcode & 0x00FF) {
-        case 0xE0: // Clear the display
+    case 0xE0: // Clear the display
         memset(chip8.display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
         chip8.displayUpdate = 1;
         break;
@@ -351,7 +321,6 @@ void code0(uint16_t opcode) {
     case 0xFB:
         width = hires ? 128 : 64;
         height = hires ? 64 : 32;
-
         for (int y = 0; y < height; y++) {
             for (int x = width - 1; x >= 4; x--) {
                 chip8.display[y * width + x]
@@ -367,7 +336,6 @@ void code0(uint16_t opcode) {
     case 0xFC:
         width = hires ? 128 : 64;
         height = hires ? 64 : 32;
-
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width - 4; x++) {
                 chip8.display[y * width + x]
@@ -383,11 +351,11 @@ void code0(uint16_t opcode) {
     case 0xFD: // Pause the emulator
         chip8.isPaused = 1;
         break;
-    case 0xFE: // Resume the emulator
+    case 0xFE:
         hires = 0;
         chip8.displayUpdate = 1;
         break;
-    case 0xFF: // Set the display to low resolution
+    case 0xFF:
         hires = 1;
         chip8.displayUpdate = 1;
         break;
@@ -395,21 +363,18 @@ void code0(uint16_t opcode) {
         if ((opcode & 0xF000) == 0x0000 && (opcode & 0xF0F0) == 0x00C0) {
             int width = hires ? 128 : 64;
             int height = hires ? 64 : 32;
-
             for (int y = height - 1; y >= (opcode & 0x000F); y--) {
                 for (int x = 0; x < width; x++) {
                     chip8.display[y * width + x]
                         = chip8.display[(y - (opcode & 0x000F)) * width + x];
                 }
             }
-
             // Clear new lines at top
             for (int y = 0; y < (opcode & 0x000F); y++) {
                 for (int x = 0; x < width; x++) {
                     chip8.display[y * width + x] = 0;
                 }
             }
-
             chip8.displayUpdate = 1;
         }
         break;
@@ -453,26 +418,21 @@ void cycle() {
         break;
     case 0x6: chip8.registers[X] = NN; break;
     case 0x7: chip8.registers[X] += NN; break;
-    case 0x8: arithmetic(subcode, X, Y); break;
+    case 0x8: code8(subcode, X, Y); break;
     case 0x9:
         if (chip8.registers[X] != chip8.registers[Y]) chip8.programCounter += 2;
         break;
     case 0xA: chip8.indexRegister = NNN; break;
     case 0xB:
-           if (jumpx) {
-            chip8.programCounter = (opcode & 0x0FFF) + chip8.registers[X]; // Use Vx
-        } else {
-            chip8.programCounter
-                = (opcode & 0x0FFF) + chip8.registers[0]; // Use V0 (standard)
-        }
-        break;
+        chip8.programCounter
+            = NNN + (jumpx ? chip8.registers[X] : chip8.registers[0]);
         break;
     case 0xC:
         chip8.registers[X] = (rand() % 256) & NN; // Apply mask
         break;
-    case 0xD: displayCode(opcode, X, Y); break;
-    case 0xE: Ecode(NN, X); break;
-    case 0xF: Fcode(opcode, X); break;
+    case 0xD: codeD(opcode, X, Y); break;
+    case 0xE: codeE(NN, X); break;
+    case 0xF: codeF(opcode, X); break;
     default: printf("Unknown opcode main 0x%x\n\n", opcode); chip8.isPaused = 1;
     }
 }
