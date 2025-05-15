@@ -1,19 +1,18 @@
 import createModule from './core.js';
 
 createModule().then((Module) => {
-    const init = Module.cwrap('init', 'void', []);
-    const cycle = Module.cwrap('cycle', 'void', []);
-    const load_program = Module.cwrap('loadROM', 'void', ['number', 'number']);
-    const pressKey = Module.cwrap('pressKey', 'void', ['number']);
-    const releaseKey = Module.cwrap('releaseKey', 'void', ['number']);
-    const getDisplayPtr = Module.cwrap('getDisplay', 'number', []);
-    const reset = Module.cwrap('reload', 'void', []);
-    const pauseChip = Module.cwrap('pauseChip', 'void', []);
-    const tick = Module.cwrap('tick', 'void', []);
-    const isDisplayUpdated = Module.cwrap('isDisplayUpdated', 'number', []);
-    const resetDisplayFlag = Module.cwrap('resetDisplayFlag', 'void', []);
-    const isHires = Module.cwrap('isHiresMode', 'number', []);
-    const setMode = Module.cwrap('setMode', 'void', ['number']);
+    const init = Module.cwrap('chip8_init_emscripten', 'void', []);
+    const cycle = Module.cwrap('chip8_cycle_emscripten', 'void', []);
+    const load_program = Module.cwrap('chip8_load_rom_emscripten', 'void', ['number', 'number']);
+    const pressKey = Module.cwrap('chip8_key_press_emscripten', 'void', ['number']);
+    const releaseKey = Module.cwrap('chip8_key_release_emscripten', 'void', ['number']);
+    const getDisplayPtr = Module.cwrap('chip8_get_display_emscripten', 'number', []);
+    const reset = Module.cwrap('chip8_reload_emscripten', 'void', []);
+    const pauseChip = Module.cwrap('chip8_pause_emscripten', 'void', []);
+    const tick = Module.cwrap('chip8_tick_emscripten', 'void', []);
+    const isDisplayUpdated = Module.cwrap('chip8_is_display_updated_emscripten', 'number', []);
+    const isHires = Module.cwrap('chip8_is_hires_emscripten', 'number', []);
+    const setMode = Module.cwrap('chip8_set_mode_emscripten', 'void', ['number']);
     let hires = 0;
     let opsPerFrame = 10;
     init();
@@ -21,14 +20,13 @@ createModule().then((Module) => {
     const canvas = document.getElementById("screen");
     const ctx = canvas.getContext("2d");
     let scale = 10;
-    const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), 64 * 32);
-    let prevDisplay = new Uint8Array(64 * 32);
+    const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), 128 * 64);
+    let prevDisplay = new Uint8Array(128 * 64);
 
     function drawDisplay(forceRedraw = 0) {
         const width = isHires() ? 128 : 64;
         const height = isHires() ? 64 : 32;
     
-        const display = new Uint8Array(Module.HEAPU8.buffer, getDisplayPtr(), width * height);
         if (hires !== isHires()) {
             hires = isHires();
             updateCanvasSize();
@@ -44,7 +42,6 @@ createModule().then((Module) => {
                     }
                 }
             }
-            resetDisplayFlag();
             return;
         }
         if (isDisplayUpdated() === 0) return;
@@ -62,7 +59,6 @@ createModule().then((Module) => {
                 }
             }
         }
-        resetDisplayFlag();
     }
 
     let emulationStarted = false;
