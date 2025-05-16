@@ -27,8 +27,6 @@ void chip8_decode_and_execute(uint16_t opcode) {
     uint8_t N = (opcode & 0xF000) >> 12;
     uint16_t NN = opcode & 0x00FF;
     int NNN = opcode & 0x0FFF;
-    uint16_t sum = 0;
-    uint8_t value = 0;
     // switch on first nibble
     switch (N) {
     case 0x0: code0(opcode); break;

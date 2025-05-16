@@ -109,6 +109,10 @@ void chip8_release_key(int key);
 int isHiresMode();
 
 // returns a pointer to the display buffer
+//The display buffer is of size DISPLAY_WIDTH * DISPLAY_HEIGHT
+//you must check isHiresMode() to know the size of the display
+//if the display is in low-res mode, the size is 64 * 32 and
+//only the first 64 * 32 bytes of the display buffer are used
 uint8_t *getDisplay();
 
 //returns 1 if the display has been updated
