@@ -1,3 +1,9 @@
+/*
+    raylibmain.c
+    This file contains the main function for the Chip8 emulator using raylib.
+    It initializes the emulator, loads a ROM, and handles input and rendering.
+*/
+
 #include "chip8.h"
 #include "raylib.h"
 #include <stdio.h>
