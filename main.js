@@ -51,7 +51,6 @@ createModule().then((Module) => {
                 const i = y * width + x;
                 const current = display[i];
                 const previous = prevDisplay[i];
-
                 if (current !== previous) {
                     ctx.fillStyle = current ? "#FFFFFF" : "#000000";
                     ctx.fillRect(x * scale, y * scale, scale, scale);
@@ -75,7 +74,7 @@ createModule().then((Module) => {
             tick();
         }, 1000 / 60);
     }
-
+    
     const updateCanvasSize = () => {
         const width = isHires() ? 128 : 64;
         const height = isHires() ? 64 : 32;
